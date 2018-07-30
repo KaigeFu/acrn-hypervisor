@@ -90,6 +90,8 @@ char *mac_seed;
 bool stdio_in_use;
 bool lapic_pt;
 
+char *zephyr_file_name;
+
 static int virtio_msix = 1;
 static bool debugexit_enabled;
 static char mac_seed_str[50];
@@ -140,6 +142,7 @@ usage(int code)
 		"       %*s [--part_info part_info_name] [--enable_trusty] [--intr_monitor param_setting]\n"
 		"       %*s [--vtpm2 sock_path] [--virtio_poll interval] [--mac_seed seed_string]\n"
 		"       %*s [--vmcfg sub_options] [--dump vm_idx] [--ptdev_no_reset] [--debugexit] <vm>\n"
+		"       %*s [--zephyr zephyr_file_name]\n"
 		"       -A: create ACPI tables\n"
 		"       -B: bootargs for kernel\n"
 		"       -c: # cpus (default 1)\n"
@@ -165,6 +168,7 @@ usage(int code)
 		"       --vsbl: vsbl file path\n"
 		"       --ovmf: ovmf file path\n"
 		"       --part_info: guest partition info file path\n"
+		"       --zephyr: zephyr file path\n"
 		"       --enable_trusty: enable trusty for guest\n"
 		"       --ptdev_no_reset: disable reset check for ptdev\n"
 		"       --debugexit: enable debug exit function\n"
@@ -175,7 +179,8 @@ usage(int code)
 		"       --lapic_pt: enable local apic passthrough\n",
 		progname, (int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
 		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
-		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "");
+		(int)strnlen(progname, PATH_MAX), "", (int)strnlen(progname, PATH_MAX), "",
+		(int)strnlen(progname, PATH_MAX), "");
 
 	exit(code);
 }
@@ -708,6 +713,7 @@ enum {
 	CMD_OPT_INTR_MONITOR,
 	CMD_OPT_VTPM2,
 	CMD_OPT_LAPIC_PT,
+	CMD_OPT_ZEPHYR,
 };
 
 static struct option long_options[] = {
@@ -747,6 +753,7 @@ static struct option long_options[] = {
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
 	{"lapic_pt",		no_argument,		0, CMD_OPT_LAPIC_PT},
+	{"zephyr",		required_argument,	0, CMD_OPT_ZEPHYR},
 	{0,			0,			0,  0  },
 };
 
@@ -902,6 +909,12 @@ dm_run(int argc, char *argv[])
 		case CMD_OPT_INTR_MONITOR:
 			if (acrn_parse_intr_monitor(optarg) != 0) {
 				errx(EX_USAGE, "invalid intr-monitor params %s", optarg);
+				exit(1);
+			}
+			break;
+		case CMD_OPT_ZEPHYR:
+			if (acrn_parse_zephyr(optarg) != 0) {
+				errx(EX_USAGE, "invalid Zephyr param %s", optarg);
 				exit(1);
 			}
 			break;

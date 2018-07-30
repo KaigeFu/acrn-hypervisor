@@ -237,7 +237,9 @@ acrn_create_e820_table(struct vmctx *ctx, struct e820_entry *e820)
 int
 acrn_sw_load(struct vmctx *ctx)
 {
-	if (vsbl_file_name)
+	if (zephyr_file_name)
+		return acrn_sw_load_zephyr(ctx);
+	else if (vsbl_file_name)
 		return acrn_sw_load_vsbl(ctx);
 	else if (ovmf_file_name)
 		return acrn_sw_load_ovmf(ctx);
