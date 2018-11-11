@@ -29,12 +29,19 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 
 	run_vcpu_pre_work(vcpu);
 
-	do {
-		/* handle pending softirq when irq enable*/
-		do_softirq();
+	/* for privil mode, irq is always disabled in hypervisor */
+	if (is_privil_mode(vcpu)) {
 		CPU_IRQ_DISABLE();
-		/* handle risk softirq when disabling irq*/
-		do_softirq();
+	}
+
+	do {
+		if (!is_privil_mode(vcpu)) {
+			/* handle pending softirq when irq enable*/
+			do_softirq();
+			CPU_IRQ_DISABLE();
+			/* handle risk softirq when disabling irq*/
+			do_softirq();
+		}
 
 		/* Check and process pending requests(including interrupt) */
 		ret = acrn_handle_pending_request(vcpu);
@@ -44,7 +51,7 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 			continue;
 		}
 
-		if (need_reschedule(vcpu->pcpu_id) != 0) {
+		if (!is_privil_mode(vcpu) && (need_reschedule(vcpu->pcpu_id) != 0)) {
 			/*
 			 * In extrem case, schedule() could return. Which
 			 * means the vcpu resume happens before schedule()
@@ -72,7 +79,9 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 
 		profiling_pre_vmexit_handler(vcpu);
 
-		CPU_IRQ_ENABLE();
+		if (!is_privil_mode(vcpu)) {
+			CPU_IRQ_ENABLE();
+		}
 		/* Dispatch handler */
 		ret = vmexit_handler(vcpu);
 		basic_exit_reason = vcpu->arch.exit_reason & 0xFFFFU;

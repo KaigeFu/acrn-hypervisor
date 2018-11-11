@@ -161,21 +161,22 @@ vlapic_build_id(const struct acrn_vlapic *vlapic)
 	const struct acrn_vcpu *vcpu = vlapic->vcpu;
 	uint32_t vlapic_id, lapic_regs_id;
 
-#ifdef CONFIG_PARTITION_MODE
 	/*
-	 * Partition mode UOS is forced to use physical mode in xAPIC
-	 * Hence ACRN needs to maintain physical APIC ids for partition
-	 * mode.
+	 * if lapic is passed thru, UOS is forced to use physical mode 
+	 * in xAPIC. Hence ACRN needs to maintain physical APIC ids for
+	 * partition mode.
+	 * lapic is passed thru under partition mode and privileged mode.
 	 */
-	vlapic_id = per_cpu(lapic_id, vcpu->pcpu_id);
-#else
-	if (is_vm0(vcpu->vm)) {
-		/* Get APIC ID sequence format from cpu_storage */
-		vlapic_id = per_cpu(lapic_id, vcpu->vcpu_id);
+	if(is_lapic_pt(vcpu)) {
+		vlapic_id = per_cpu(lapic_id, vcpu->pcpu_id);
 	} else {
-		vlapic_id = (uint32_t)vcpu->vcpu_id;
+		if (is_vm0(vcpu->vm)) {
+			/* Get APIC ID sequence format from cpu_storage */
+			vlapic_id = per_cpu(lapic_id, vcpu->vcpu_id);
+		} else {
+			vlapic_id = (uint32_t)vcpu->vcpu_id;
+		}
 	}
-#endif
 
 	if (is_x2apic_enabled(vlapic)) {
 		lapic_regs_id = vlapic_id;
@@ -2073,7 +2074,6 @@ static inline  uint32_t x2apic_msr_to_regoff(uint32_t msr)
 	return (((msr - 0x800U) & 0x3FFU) << 4U);
 }
 
-#ifdef CONFIG_PARTITION_MODE
 /*
  * If x2apic is pass-thru to guests, we have to special case the following
  * 1. INIT Delivery mode
@@ -2121,7 +2121,6 @@ vlapic_x2apic_pt_icr_access(struct acrn_vm *vm, uint64_t val)
 	}
 	return 0;
 }
-#endif
 
 static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool write,
 								uint64_t *val)
@@ -2136,14 +2135,13 @@ static int32_t vlapic_x2apic_access(struct acrn_vcpu *vcpu, uint32_t msr, bool w
 	 */
 	vlapic = vcpu_vlapic(vcpu);
 	if (is_x2apic_enabled(vlapic)) {
-#ifdef CONFIG_PARTITION_MODE
-		if (vcpu->vm->vm_desc->lapic_pt) {
+		if (is_lapic_pt(vcpu)) {
 			if (msr == MSR_IA32_EXT_APIC_ICR) {
 				error = vlapic_x2apic_pt_icr_access(vcpu->vm, *val);
 			}
 			return error;
 		}
-#endif
+
 		offset = x2apic_msr_to_regoff(msr);
 		if (write) {
 			if (!is_x2apic_read_only_msr(msr)) {
@@ -2245,6 +2243,7 @@ int32_t vlapic_create(struct acrn_vcpu *vcpu)
 	}
 
 	vlapic_init(vcpu_vlapic(vcpu));
+
 	return 0;
 }
 

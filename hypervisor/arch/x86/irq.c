@@ -379,8 +379,7 @@ void dispatch_exception(struct intr_excp_ctx *ctx)
 	cpu_dead(pcpu_id);
 }
 
-#ifdef CONFIG_PARTITION_MODE
-void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
+void dispatch_interrupt_lapic_pt(struct intr_excp_ctx *ctx)
 {
 	uint8_t vr = ctx->vector;
 	struct acrn_vcpu *vcpu;
@@ -399,7 +398,6 @@ void partition_mode_dispatch_interrupt(struct intr_excp_ctx *ctx)
 		dispatch_interrupt(ctx);
 	}
 }
-#endif
 
 static void init_irq_descs(void)
 {

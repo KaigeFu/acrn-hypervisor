@@ -98,6 +98,7 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 	/* Only for SOS: Configure VM software information */
 	/* For UOS: This VM software information is configure in DM */
 	if (is_vm0(vm)) {
+		vm->is_privileged = false;
 		rebuild_vm0_e820();
 		status = prepare_vm0_memmap(vm);
 		if (status != 0) {
@@ -119,6 +120,7 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 				hva2hpa(ept_mem_ops->get_sworld_memory_base(ept_mem_ops->info)),
 				TRUSTY_EPT_REBASE_GPA, TRUSTY_RAM_SIZE, EPT_WB | EPT_RWX);
 		}
+		vm->is_privileged = vm_desc->is_privileged;
 
 		(void)memcpy_s(&vm->GUID[0], sizeof(vm->GUID),
 					&vm_desc->GUID[0], sizeof(vm_desc->GUID));
@@ -129,6 +131,8 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 		init_vm_boot_info(vm);
 #endif
 	}
+	pr_acrnlog("%s %u privileged mode: %s", vm->vm_id, __func__,
+			vm->is_privileged?"TRUE":"FALSE");
 
 	enable_iommu();
 

@@ -365,11 +365,11 @@ int32_t external_interrupt_vmexit_handler(struct acrn_vcpu *vcpu)
 		ctx.rflags = vcpu_get_rflags(vcpu);
 		ctx.cs     = exec_vmread32(VMX_GUEST_CS_SEL);
 
-#ifdef CONFIG_PARTITION_MODE
-		partition_mode_dispatch_interrupt(&ctx);
-#else
+	if (is_lapic_pt(vcpu)) {
+		dispatch_interrupt_lapic_pt(&ctx);
+	} else {
 		dispatch_interrupt(&ctx);
-#endif
+	}
 
 		vcpu_retain_rip(vcpu);
 

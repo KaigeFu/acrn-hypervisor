@@ -152,6 +152,7 @@ struct acrn_vm {
 	uint32_t vcpuid_entry_nr, vcpuid_level, vcpuid_xlevel;
 	struct vcpuid_entry vcpuid_entries[MAX_VM_VCPUID_ENTRIES];
 	struct vpci vpci;
+	bool is_privileged;
 #ifdef CONFIG_PARTITION_MODE
 	struct vm_description	*vm_desc;
 	uint8_t vrtc_offset;
@@ -178,6 +179,7 @@ struct vm_description {
 	uint16_t               vm_hw_num_cores;   /* Number of virtual cores */
 	/* Whether secure world is supported for current VM. */
 	bool                   sworld_supported;
+	bool			is_privileged; /* whether the vm is privileged */
 #ifdef CONFIG_PARTITION_MODE
 	uint8_t			vm_id;
 	struct mptable_info	*mptable;
@@ -193,6 +195,20 @@ struct vm_description {
 static inline bool is_vm0(const struct acrn_vm *vm)
 {
 	return (vm->vm_id) == 0U;
+}
+
+static inline bool is_privil_mode(const struct acrn_vcpu *vcpu)
+{
+	return vcpu->vm->is_privileged;
+}
+
+static inline bool is_lapic_pt(const struct acrn_vcpu *vcpu)
+{
+#ifdef CONFIG_PARTITION_MODE
+	return vcpu->vm->vm_desc->lapic_pt;
+#else
+	return vcpu->vm->is_privileged;
+#endif
 }
 
 /*
