@@ -197,13 +197,13 @@ C_SRCS += dm/vioapic.c
 C_SRCS += dm/hw/pci.c
 C_SRCS += dm/vpci/core.c
 C_SRCS += dm/vpci/vpci.c
+C_SRCS += dm/vrtc.c
 ifeq ($(CONFIG_PARTITION_MODE),y)
 C_SRCS += partition/$(CONFIG_BOARD)/mptable.c
 C_SRCS += partition/$(CONFIG_BOARD)/vm_description.c
 C_SRCS += dm/vpci/partition_mode.c
 C_SRCS += dm/vpci/hostbridge.c
 C_SRCS += dm/vpci/pci_pt.c
-C_SRCS += dm/vrtc.c
 else
 C_SRCS += dm/vpci/sharing_mode.c
 C_SRCS += dm/vpci/msi.c

@@ -155,8 +155,8 @@ struct acrn_vm {
 	bool is_privileged;
 #ifdef CONFIG_PARTITION_MODE
 	struct vm_description	*vm_desc;
-	uint8_t vrtc_offset;
 #endif
+	uint8_t vrtc_offset;
 
 	spinlock_t softirq_dev_lock;
 	struct list_head softirq_dev_entry_list;
@@ -287,6 +287,7 @@ const struct vm_description_array *get_vm_desc_base(void);
 #endif
 
 struct acrn_vm *get_vm_from_vmid(uint16_t vm_id);
+void vrtc_init(struct acrn_vm *vm);
 
 #ifdef CONFIG_PARTITION_MODE
 struct vm_description_array {
@@ -299,7 +300,5 @@ struct pcpu_vm_desc_mapping {
 	bool is_bsp;
 };
 extern const struct pcpu_vm_desc_mapping pcpu_vm_desc_map[];
-
-void vrtc_init(struct acrn_vm *vm);
 #endif
 #endif /* VM_H_ */

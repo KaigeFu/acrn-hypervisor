@@ -166,6 +166,10 @@ int32_t create_vm(struct vm_description *vm_desc, struct acrn_vm **rtn_vm)
 	vrtc_init(vm);
 #endif
 
+	if (vm->is_privileged == true) {
+		vrtc_init(vm);
+	}
+
 	vpci_init(vm);
 
 	/* vpic wire_mode default is INTR */
