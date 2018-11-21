@@ -101,6 +101,11 @@ void handle_complete_ioreq(uint16_t pcpu_id)
 	}
 }
 
+static inline void busy_wait(void)
+{
+	asm volatile("nop");
+}
+
 /**
  * @brief Deliver \p io_req to SOS and suspend \p vcpu till its completion
  *
@@ -140,7 +145,10 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 	 * TODO: when pause_vcpu changed to switch vcpu out directlly, we
 	 * should fix the race issue between req.processed update and vcpu pause
 	 */
-	pause_vcpu(vcpu, VCPU_PAUSED);
+	if (!is_privil_mode(vcpu)) {
+		/* For privileged VM, we busy-wait at the end of this func instead of pausing vcpu */
+		pause_vcpu(vcpu, VCPU_PAUSED);
+	}
 
 	/* Must clear the signal before we mark req as pending
 	 * Once we mark it pending, VHM may process req and signal us
@@ -157,6 +165,12 @@ int32_t acrn_insert_request_wait(struct acrn_vcpu *vcpu, const struct io_request
 
 	/* signal VHM */
 	fire_vhm_interrupt();
+
+	if (is_privil_mode(vcpu)) {
+		while(get_vhm_req_state(vcpu->vm, vcpu->vcpu_id) != REQ_STATE_FREE) {
+			busy_wait();
+		}
+	}
 
 	return 0;
 }

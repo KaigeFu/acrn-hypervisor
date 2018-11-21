@@ -32,8 +32,11 @@ static void complete_ioreq(struct acrn_vcpu *vcpu, struct io_request *io_req)
 			break;
 		}
 	}
-	atomic_store32(&vhm_req->processed, REQ_STATE_FREE);
 	clac();
+
+	if (!is_privil_mode(vcpu)) {
+		set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_FREE);
+	}
 }
 
 /**
@@ -173,7 +176,14 @@ void emulate_io_post(struct acrn_vcpu *vcpu)
 		break;
 	}
 
-	resume_vcpu(vcpu);
+	if (!is_privil_mode(vcpu)) {
+		resume_vcpu(vcpu);
+	} else {
+		/* For privil VM, set req state to REQ_STATE_FREE to exit the busy wait
+		 * in  acrn_insert_request_wait().
+		 */
+		set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_FREE);
+	}
 }
 
 /**
