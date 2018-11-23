@@ -92,6 +92,36 @@ int32_t hcall_get_api_version(struct acrn_vm *vm, uint64_t param)
 }
 
 /**
+ * @brief allocate pcpu for privileged VM
+ *
+ * @pre Pointer cv is not NULL
+ * @return num of pcpu allocated
+ */
+static uint16_t alloc_privil_vm_pcpus(struct acrn_create_vm *cv)
+{
+	uint16_t i;
+	uint16_t pcpu_id;
+	uint16_t lapic_id;
+
+	cv->lapic_bitmap = 0U;
+	for (i = 0U; i < cv->vcpu_num; i++) {
+		pcpu_id = allocate_pcpu();
+		lapic_id = per_cpu(lapic_id, pcpu_id);
+		if (pcpu_id != INVALID_CPU_ID) {
+			pr_acrnlog("%s: pcpu_id=%u, lapic_id=%u", __func__, pcpu_id, lapic_id);
+			cv->lapic_bitmap |= 1U << lapic_id;
+		} else {
+			pr_err("%s: No pcpu available\n", __func__);
+			break;
+		}
+	}
+	pr_acrnlog("%s: %u of required %d CPUs allocated", __func__, i, cv->vcpu_num);
+
+	return i;
+}
+ 
+
+/**
  * @brief create virtual machine
  *
  * Create a virtual machine based on parameter, currently there is no
@@ -121,6 +151,7 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 	(void)memset(&vm_desc, 0U, sizeof(vm_desc));
 	vm_desc.sworld_supported = ((cv.vm_flag & (SECURE_WORLD_ENABLED)) != 0U);
 	vm_desc.is_privileged = ((cv.vm_flag & (PRIVILEGED_MODE)) != 0U);
+	vm_desc.vm_hw_num_cores = cv.vcpu_num;
 	(void)memcpy_s(&vm_desc.GUID[0], 16U, &cv.GUID[0], 16U);
 	ret = create_vm(&vm_desc, &target_vm);
 
@@ -130,10 +161,18 @@ int32_t hcall_create_vm(struct acrn_vm *vm, uint64_t param)
 		ret = -1;
 	} else {
 		cv.vmid = target_vm->vm_id;
-		ret = 0;
+
+		if (target_vm->is_privileged) {
+			ret = alloc_privil_vm_pcpus(&cv);
+			if (ret == cv.vcpu_num) {
+				ret = 0;
+			} else {
+				ret = -1;
+			}
+		}
 	}
 
-	if (copy_to_gpa(vm, &cv.vmid, param, sizeof(cv.vmid)) != 0) {
+	if (copy_to_gpa(vm, &cv, param, sizeof(cv)) != 0) {
 		pr_err("%s: Unable copy param to vm\n", __func__);
 		return -1;
 	}

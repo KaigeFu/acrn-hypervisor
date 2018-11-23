@@ -348,8 +348,14 @@ struct acrn_create_vm {
 	 */
 	uint64_t vm_flag;
 
+	/* Placeholder, to be consistent with definition in SOS */
+	uint64_t req;
+
+	/* Bitmap of physical lapic if of allocated pcpu */
+	uint32_t lapic_bitmap;
+
 	/** Reserved for future use*/
-	uint8_t  reserved2[24];
+	uint8_t  reserved2[12];
 } __aligned(8);
 
 /**
