@@ -166,6 +166,7 @@ usage(int code)
 		"       --debugexit: enable debug exit function\n"
 		"       --intr_monitor: enable interrupt storm monitor\n"
 		"       --vtpm2: Virtual TPM2 args: sock_path=$PATH_OF_SWTPM_SOCKET\n"
+		"       --privil_vm: enable privileged vm\n"
 		"............its params: threshold/s,probe-period(s),delay_time(ms),delay_duration(ms)\n",
 		progname, (int)strlen(progname), "", (int)strlen(progname), "",
 		(int)strlen(progname), "");
@@ -754,6 +755,7 @@ enum {
 	CMD_OPT_DUMP,
 	CMD_OPT_INTR_MONITOR,
 	CMD_OPT_VTPM2,
+	CMD_OPT_PRIVIL_VM,
 };
 
 static struct option long_options[] = {
@@ -792,6 +794,7 @@ static struct option long_options[] = {
 	{"debugexit",		no_argument,		0, CMD_OPT_DEBUGEXIT},
 	{"intr_monitor",	required_argument,	0, CMD_OPT_INTR_MONITOR},
 	{"vtpm2",		required_argument,	0, CMD_OPT_VTPM2},
+	{"privil_vm",		no_argument,		0, CMD_OPT_PRIVIL_VM},
 	{0,			0,			0,  0  },
 };
 
@@ -946,6 +949,10 @@ dm_run(int argc, char *argv[])
 				errx(EX_USAGE, "invalid intr-monitor params %s", optarg);
 				exit(1);
 			}
+			break;
+		case CMD_OPT_PRIVIL_VM:
+			fprintf(stderr, "To create privileged vm\n");
+			privileged_vm = true;
 			break;
 		case 'h':
 			usage(0);

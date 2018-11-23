@@ -131,6 +131,12 @@ vm_create(const char *name, uint64_t req_buf)
 	else
 		create_vm.vm_flag &= (~SECURE_WORLD_ENABLED);
 
+	/* Set privileged vm flag */
+	if (privileged_vm)
+		create_vm.vm_flag |= PRIVILEGED_VM;
+	else
+		create_vm.vm_flag &= (~PRIVILEGED_VM);
+
 	create_vm.vcpu_num = guest_ncpus;
 
 	create_vm.req_buf = req_buf;
