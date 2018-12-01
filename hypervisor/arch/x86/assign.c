@@ -582,7 +582,12 @@ int32_t ptirq_msix_remap(struct acrn_vm *vm, uint16_t virt_bdf,
 	}
 
 	/* build physical config MSI, update to info->pmsi_xxx */
-	ptirq_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
+	if (vm->is_privileged) {
+		/* for privil vm, keep vector from guest */
+		ptirq_build_physical_msi(vm, info, info->vmsi_data & 0xFFU);
+	} else {
+		ptirq_build_physical_msi(vm, info, irq_to_vector(entry->allocated_pirq));
+	}
 	entry->msi = *info;
 
 	dev_dbg(ACRN_DBG_IRQ, "PCI %x:%x.%x MSI VR[%d] 0x%x->0x%x assigned to vm%d",
