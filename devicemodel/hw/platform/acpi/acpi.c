@@ -229,6 +229,9 @@ basl_fwrite_xsdt(FILE *fp, struct vmctx *ctx)
 	return 0;
 }
 
+extern bool privileged_vm;
+extern uint32_t lapic_bitmap;
+
 static int
 basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 {
@@ -239,7 +242,11 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, " */\n");
 	EFPRINTF(fp, "[0004]\t\tSignature : \"APIC\"\n");
 	EFPRINTF(fp, "[0004]\t\tTable Length : 00000000\n");
-	EFPRINTF(fp, "[0001]\t\tRevision : 01\n");
+	if (privileged_vm) {
+		EFPRINTF(fp, "[0001]\t\tRevision : 02\n");
+	} else {
+		EFPRINTF(fp, "[0001]\t\tRevision : 01\n");
+	}
 	EFPRINTF(fp, "[0001]\t\tChecksum : 00\n");
 	EFPRINTF(fp, "[0006]\t\tOem ID : \"DM \"\n");
 	EFPRINTF(fp, "[0008]\t\tOem Table ID : \"DMMADT  \"\n");
@@ -254,6 +261,36 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "[0004]\t\tFlags (decoded below) : 00000001\n");
 	EFPRINTF(fp, "\t\t\tPC-AT Compatibility : 1\n");
 	EFPRINTF(fp, "\n");
+
+	if (privileged_vm) {
+		/* build a x2apic entry for each cpu of privileged VM */
+		for (i = 0; i < sizeof(lapic_bitmap) * 8; i++) {
+			if (((1U << i) & lapic_bitmap) == 0U) {
+				continue;
+			}
+			fprintf(stderr, "%s:apic_id=%d\n", __func__, i);
+			EFPRINTF(fp, "[0001]\t\tSubtable Type : 09\n");	
+			EFPRINTF(fp, "[0001]\t\tLength : 10\n");
+			EFPRINTF(fp, "[0002]\t\tReserved : 0000\n");
+			/* iasl expects hex values for the proc and apic id's */
+			EFPRINTF(fp, "[0004]\t\tX2APIC ID : %08x\n", i);
+			EFPRINTF(fp, "[0004]\t\tFlags (decoded below) : 00000001\n");
+			EFPRINTF(fp, "\t\t\tProcessor Enabled : 1\n");
+			EFPRINTF(fp, "[0004]\t\tProcessor UID : %08x\n", i);
+			EFPRINTF(fp, "\n");
+		}
+
+		/* Local APIC NMI is connected to LINT 1 on all CPUs */
+		EFPRINTF(fp, "[0001]\t\tSubtable Type : 0A\n");
+		EFPRINTF(fp, "[0001]\t\tLength : 12\n");
+		EFPRINTF(fp, "[0002]\t\tFlags (decoded below) : 0005\n");
+		EFPRINTF(fp, "\t\t\tPolarity : 1\n");
+		EFPRINTF(fp, "\t\t\tTrigger Mode : 1\n");
+		EFPRINTF(fp, "[0004]\t\tProcessor UId : FFFFFFFF\n");
+		EFPRINTF(fp, "[0001]\t\tInterrupt : 01\n");
+		EFPRINTF(fp, "[0003]\t\tReserved : 000000\n");
+		EFPRINTF(fp, "\n");
+	} else {
 
 	/* Add a Processor Local APIC entry for each CPU */
 	for (i = 0; i < basl_ncpu; i++) {
@@ -307,6 +344,7 @@ basl_fwrite_madt(FILE *fp, struct vmctx *ctx)
 	EFPRINTF(fp, "\t\t\tTrigger Mode : 1\n");
 	EFPRINTF(fp, "[0001]\t\tInterrupt : 01\n");
 	EFPRINTF(fp, "\n");
+	}
 
 	EFFLUSH(fp);
 
