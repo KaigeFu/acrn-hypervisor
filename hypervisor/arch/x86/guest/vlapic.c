@@ -1814,13 +1814,17 @@ vlapic_deliver_intr(struct acrn_vm *vm, bool level, uint32_t dest, bool phys,
 			if ((dmask & (1UL << vcpu_id)) != 0UL) {
 				target_vcpu = vcpu_from_vid(vm, vcpu_id);
 
-				/* only make request when vlapic enabled */
-				vlapic = vcpu_vlapic(target_vcpu);
-				if (vlapic_enabled(vlapic)) {
-					if (delmode == IOAPIC_RTE_DELEXINT) {
-						vcpu_inject_extint(target_vcpu);
-					} else {
-						vlapic_set_intr(target_vcpu, vec, level);
+				if (is_lapic_pt(target_vcpu)) {
+					send_single_ipi(target_vcpu->pcpu_id, vec);
+				} else {
+					/* only make request when vlapic enabled */
+					vlapic = vcpu_vlapic(target_vcpu);
+					if (vlapic_enabled(vlapic)) {
+						if (delmode == IOAPIC_RTE_DELEXINT) {
+							vcpu_inject_extint(target_vcpu);
+						} else {
+							vlapic_set_intr(target_vcpu, vec, level);
+						}
 					}
 				}
 			}
