@@ -367,8 +367,8 @@ struct acrn_create_vcpu {
 	/** the virtual CPU ID for the VCPU created */
 	uint16_t vcpu_id;
 
-	/** the physical CPU ID for the VCPU created */
-	uint16_t pcpu_id;
+	/** the physical LAPIC ID for the VCPU created */
+	uint16_t lapic_id;
 } __aligned(8);
 
 /* General-purpose register layout aligned with the general-purpose register idx

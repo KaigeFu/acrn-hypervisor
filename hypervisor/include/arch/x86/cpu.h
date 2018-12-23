@@ -320,6 +320,7 @@ void start_cpus(void);
 void stop_cpus(void);
 void wait_sync_change(uint64_t *sync, uint64_t wake_sync);
 void cpu_l1d_flush(void);
+uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id);
 
 #define CPU_SEG_READ(seg, result_ptr)						\
 {										\

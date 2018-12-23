@@ -288,7 +288,14 @@ int32_t hcall_create_vcpu(struct acrn_vm *vm, uint16_t vmid, uint64_t param)
 		return -1;
 	}
 
-	pcpu_id = allocate_pcpu();
+	if (target_vm->is_privileged) {
+		/* for privileged vm, PCPUs have been allocated when vm created,
+		 * lapicid of allocated PCPU is passed from DM to create VCPU with. 
+		 */
+		pcpu_id = get_cpu_id_from_lapic_id(cv.lapic_id);
+	} else {
+		pcpu_id = allocate_pcpu();
+	}
 	if (pcpu_id == INVALID_CPU_ID) {
 		pr_err("%s: No physical available\n", __func__);
 		return -1;

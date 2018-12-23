@@ -49,7 +49,6 @@ static void cpu_cap_detect(void);
 static void cpu_xsave_init(void);
 static void set_current_cpu_id(uint16_t pcpu_id);
 static void print_hv_banner(void);
-static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id);
 int32_t ibrs_type;
 static uint64_t start_tsc __attribute__((__section__(".bss_noinit")));
 
@@ -489,7 +488,7 @@ void init_cpu_post(uint16_t pcpu_id)
 	}
 }
 
-static uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
+uint16_t get_cpu_id_from_lapic_id(uint32_t lapic_id)
 {
 	uint16_t i;
 
