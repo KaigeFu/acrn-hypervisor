@@ -83,6 +83,7 @@ check_api(int fd)
 }
 
 static int devfd = -1;
+extern uint32_t lapic_bitmap;
 
 struct vmctx *
 vm_create(const char *name, uint64_t req_buf)
@@ -130,6 +131,8 @@ vm_create(const char *name, uint64_t req_buf)
 	else
 		create_vm.vm_flag &= (~SECURE_WORLD_ENABLED);
 
+	create_vm.vcpu_num = guest_ncpus;
+
 	create_vm.req_buf = req_buf;
 	while (retry > 0) {
 		error = ioctl(ctx->fd, IC_CREATE_VM, &create_vm);
@@ -145,6 +148,10 @@ vm_create(const char *name, uint64_t req_buf)
 	}
 
 	ctx->vmid = create_vm.vmid;
+	if (privileged_vm) {
+		lapic_bitmap = create_vm.lapic_bitmap;
+		fprintf(stderr, "%s: lapic_bitmap of allcated PCPUs 0x%x\n", __func__, lapic_bitmap);
+	}
 
 	return ctx;
 
@@ -560,13 +567,14 @@ vm_reset_ptdev_intx_info(struct vmctx *ctx, int virt_pin, bool pic_pin)
 }
 
 int
-vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id)
+vm_create_vcpu(struct vmctx *ctx, uint16_t vcpu_id, uint16_t lapic_id)
 {
 	struct acrn_create_vcpu cv;
 	int error;
 
 	bzero(&cv, sizeof(struct acrn_create_vcpu));
 	cv.vcpu_id = vcpu_id;
+	cv.lapic_id = lapic_id;
 	error = ioctl(ctx->fd, IC_CREATE_VCPU, &cv);
 
 	return error;

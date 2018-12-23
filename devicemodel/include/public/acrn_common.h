@@ -259,8 +259,11 @@ struct acrn_create_vm {
 
 	uint64_t req_buf;
 
+	/* lapic bitmap of allocated pcpu, return to dm */
+	uint32_t lapic_bitmap;
+
 	/** Reserved for future use*/
-	uint8_t  reserved2[16];
+	uint8_t  reserved2[12];
 } __aligned(8);
 
 /**
@@ -272,8 +275,8 @@ struct acrn_create_vcpu {
 	/** the virtual CPU ID for the VCPU created */
 	uint16_t vcpu_id;
 
-	/** the physical CPU ID for the VCPU created */
-	uint16_t pcpu_id;
+	/** the lapic id for the VCPU created */
+	uint16_t lapic_id;
 } __aligned(8);
 
 struct acrn_gp_regs {

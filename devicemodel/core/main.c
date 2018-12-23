@@ -87,6 +87,8 @@ char *elf_file_name;
 uint8_t trusty_enabled;
 char *mac_seed;
 bool stdio_in_use;
+bool privileged_vm = false;
+uint32_t lapic_bitmap = 0U;
 
 static int virtio_msix = 1;
 static bool debugexit_enabled;
@@ -267,14 +269,38 @@ start_thread(void *param)
 	return NULL;
 }
 
+/* Return the smallest lapic id from lapic_bitmap and clear the bit */
+static int get_min_alloc_lapicid(void)
+{
+	int i;
+	int lapic_id = -1;
+
+	for (i = 0; i < sizeof(lapic_bitmap) * 8; i++) {
+		if ((1 << i) & lapic_bitmap) {
+			lapic_bitmap &= ~(1 << i);
+			lapic_id = i;
+			break;
+		}
+	}
+
+	return lapic_id;
+}
+
 static int
 add_cpu(struct vmctx *ctx, int guest_ncpus)
 {
 	int i;
 	int error;
+	uint16_t lapic_id = (uint16_t)(-1);
 
 	for (i = 0; i < guest_ncpus; i++) {
-		error = vm_create_vcpu(ctx, (uint16_t)i);
+		if (privileged_vm) {
+			lapic_id = (uint16_t)get_min_alloc_lapicid();
+			if (lapic_id == (uint16_t)(-1))
+				continue;
+		}
+
+		error = vm_create_vcpu(ctx, (uint16_t)i, lapic_id);
 		if (error != 0) {
 			fprintf(stderr, "ERROR: could not create VCPU %d\n", i);
 			return error;
