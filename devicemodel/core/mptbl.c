@@ -78,6 +78,7 @@
 
 static void *oem_tbl_start;
 static int oem_tbl_size;
+extern uint32_t lapic_bitmap;
 
 static uint8_t
 mpt_compute_checksum(void *base, size_t len)
@@ -117,18 +118,40 @@ static void
 mpt_build_proc_entries(proc_entry_ptr mpep, int ncpu)
 {
 	int i;
-
-	for (i = 0; i < ncpu; i++) {
-		memset(mpep, 0, sizeof(*mpep));
-		mpep->type = MPCT_ENTRY_PROCESSOR;
-		mpep->apic_id = i; /* XXX */
-		mpep->apic_version = LAPIC_VERSION;
-		mpep->cpu_flags = PROCENTRY_FLAG_EN;
-		if (i == 0)
-			mpep->cpu_flags |= PROCENTRY_FLAG_BP;
-		mpep->cpu_signature = MPEP_SIG;
-		mpep->feature_flags = MPEP_FEATURES;
-		mpep++;
+	if (!privileged_vm) {	
+		for (i = 0; i < ncpu; i++) {
+			memset(mpep, 0, sizeof(*mpep));
+			mpep->type = MPCT_ENTRY_PROCESSOR;
+			mpep->apic_id = i; /* XXX */
+			mpep->apic_version = LAPIC_VERSION;
+			mpep->cpu_flags = PROCENTRY_FLAG_EN;
+			if (i == 0)
+				mpep->cpu_flags |= PROCENTRY_FLAG_BP;
+			mpep->cpu_signature = MPEP_SIG;
+			mpep->feature_flags = MPEP_FEATURES;
+			mpep++;
+		}
+	} else {
+		/* build proc entries for privileged VM */
+		int bsp_mark = 0;
+		for (i = 0; i < sizeof(lapic_bitmap) * 8; i++) {
+			if (((1U << i) & lapic_bitmap) == 0U) {
+				continue;
+			}
+			fprintf(stderr, "%s:apic_id=%d\n", __func__, i);
+			memset(mpep, 0, sizeof(*mpep));
+			mpep->type = MPCT_ENTRY_PROCESSOR;
+			mpep->apic_id = i;
+			mpep->apic_version = LAPIC_VERSION;
+			mpep->cpu_flags = PROCENTRY_FLAG_EN;
+			if (bsp_mark == 0) {
+				mpep->cpu_flags |= PROCENTRY_FLAG_BP;
+				bsp_mark++;
+			}
+			mpep->cpu_signature = MPEP_SIG;
+			mpep->feature_flags = MPEP_FEATURES;
+			mpep++;
+		}
 	}
 }
 
@@ -335,16 +358,19 @@ mptable_build(struct vmctx *ctx, int ncpu)
 	curraddr += sizeof(*mpeb) * MPE_NUM_BUSES;
 	mpch->entry_count += MPE_NUM_BUSES;
 
-	mpei = (io_apic_entry_ptr)curraddr;
-	mpt_build_ioapic_entries(mpei, 0);
-	curraddr += sizeof(*mpei);
-	mpch->entry_count++;
+	/* Don't generate io_apic entry for privileged vm */
+	if (!privileged_vm) {
+		mpei = (io_apic_entry_ptr)curraddr;
+		mpt_build_ioapic_entries(mpei, 0);
+		curraddr += sizeof(*mpei);
+		mpch->entry_count++;
 
-	mpie = (int_entry_ptr) curraddr;
-	ioints = mpt_count_ioint_entries();
-	mpt_build_ioint_entries(mpie, 0);
-	curraddr += sizeof(*mpie) * ioints;
-	mpch->entry_count += ioints;
+		mpie = (int_entry_ptr) curraddr;
+		ioints = mpt_count_ioint_entries();
+		mpt_build_ioint_entries(mpie, 0);
+		curraddr += sizeof(*mpie) * ioints;
+		mpch->entry_count += ioints;
+	}
 
 	mpie = (int_entry_ptr)curraddr;
 	mpt_build_localint_entries(mpie);
