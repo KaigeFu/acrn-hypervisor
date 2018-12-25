@@ -51,7 +51,7 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 			continue;
 		}
 
-		if (!is_privil_mode(vcpu) && (need_reschedule(vcpu->pcpu_id) != 0)) {
+		if ((need_reschedule(vcpu->pcpu_id) != 0)) {
 			/*
 			 * In extrem case, schedule() could return. Which
 			 * means the vcpu resume happens before schedule()

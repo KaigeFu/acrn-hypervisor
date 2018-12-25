@@ -198,6 +198,7 @@ int32_t hcall_destroy_vm(uint16_t vmid)
 	if (target_vm == NULL) {
 		ret = -1;
 	} else {
+		pr_acrnlog("Shutdown vm%hu", vmid);
 		ret = shutdown_vm(target_vm);
 	}
 
@@ -250,6 +251,7 @@ int32_t hcall_pause_vm(uint16_t vmid)
 	if (target_vm == NULL) {
 	        ret = -1;
 	} else {
+		pr_acrnlog("Pausing vm%hu", vmid);
 		pause_vm(target_vm);
 		ret = 0;
 	}

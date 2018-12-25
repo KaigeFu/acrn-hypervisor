@@ -446,8 +446,8 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 	 * vm_suspend_resume() for resetting the ioreq states in the VHM and
 	 * hypervisor.
 	 */
-	if ((VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) ||
-		(VM_SUSPEND_SUSPEND == vm_get_suspend_mode()))
+	if ((VM_SUSPEND_SYSTEM_RESET == vm_get_suspend_mode()) || (VM_SUSPEND_SUSPEND == vm_get_suspend_mode()) ||
+		(VM_SUSPEND_POWEROFF == vm_get_suspend_mode()))
 		return;
 
 	vm_notify_request_done(ctx, vcpu);

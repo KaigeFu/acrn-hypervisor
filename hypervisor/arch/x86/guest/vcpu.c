@@ -574,7 +574,9 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 		make_reschedule_request(vcpu);
 		release_schedule_lock(vcpu->pcpu_id);
 
-		if (vcpu->pcpu_id != pcpu_id) {
+		pr_acrnlog("Paused vcpu%hu's pcpu%hu on pcpu%hu", vcpu->vcpu_id, vcpu->pcpu_id, pcpu_id);
+		set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_FREE);
+		if ((vcpu->pcpu_id != pcpu_id)) {
 			while (atomic_load32(&vcpu->running) == 1U)
 				__asm__ __volatile("pause" ::: "memory");
 		}
