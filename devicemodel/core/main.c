@@ -450,6 +450,15 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 		(VM_SUSPEND_SUSPEND == vm_get_suspend_mode()))
 		return;
 
+	/* For privileged vm, lapic is passthrough to uos and we cannot kick off
+	 * the vcpu to hypervisor through IPI. Here we cannot notify the VHM/hypervisor
+	 * on the completion at this point if the UOS is in poweroff mode. Otherwise,
+	 * it will re-enter the uos and we will not have a chance to pause the vcpu.
+	 * we will mark it as done when pausing vcpu.
+	 */
+	if (privileged_vm && (VM_SUSPEND_POWEROFF == vm_get_suspend_mode()))
+		return;
+
 	vm_notify_request_done(ctx, vcpu);
 }
 
