@@ -17,6 +17,10 @@ static void run_vcpu_pre_work(struct acrn_vcpu *vcpu)
 	}
 }
 
+extern void restore_lapic(const struct lapic_regs *regs);
+extern bool poweroff;
+extern struct lapic_regs privil_lapic_regs;
+
 void vcpu_thread(struct acrn_vcpu *vcpu)
 {
 	uint32_t basic_exit_reason = 0U;
@@ -49,6 +53,11 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 			pr_fatal("vcpu handling pending request fail");
 			pause_vcpu(vcpu, VCPU_ZOMBIE);
 			continue;
+		}
+
+		if (poweroff && is_privil_mode(vcpu)) {
+			pr_acrnlog("Poweroff vm on pCPU%u", vcpu->pcpu_id);
+			restore_lapic(&privil_lapic_regs);
 		}
 
 		if ((need_reschedule(vcpu->pcpu_id) != 0)) {

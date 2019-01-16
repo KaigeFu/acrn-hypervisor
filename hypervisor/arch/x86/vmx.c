@@ -1070,6 +1070,8 @@ void init_vmcs(struct acrn_vcpu *vcpu)
 	init_exit_ctrl(vcpu);
 }
 
+struct lapic_regs privil_lapic_regs;
+
 void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 {
 	uint32_t value32;
@@ -1083,6 +1085,8 @@ void switch_apicv_mode_x2apic(struct acrn_vcpu *vcpu)
 		 * Disable Register Virtualization and virtual interrupt delivery
 		 * Disable "use TPR shadow"
 		 */
+
+		save_lapic(&privil_lapic_regs);
 
 		value32 = exec_vmread32(VMX_PIN_VM_EXEC_CONTROLS);
 		value32 &= ~VMX_PINBASED_CTLS_IRQ_EXIT;

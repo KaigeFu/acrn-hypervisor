@@ -134,7 +134,7 @@ void save_lapic(struct lapic_regs *regs)
 		(uint32_t) msr_read(MSR_IA32_EXT_APIC_DIV_CONF);
 }
 
-static void restore_lapic(const struct lapic_regs *regs)
+void restore_lapic(const struct lapic_regs *regs)
 {
 	msr_write(MSR_IA32_EXT_APIC_TPR, (uint64_t) regs->tpr.v);
 	msr_write(MSR_IA32_EXT_APIC_SIVR, (uint64_t) regs->svr.v);

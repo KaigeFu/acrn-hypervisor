@@ -558,6 +558,8 @@ void reset_vcpu(struct acrn_vcpu *vcpu)
 	reset_vcpu_regs(vcpu);
 }
 
+bool poweroff = false;
+
 void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 {
 	uint16_t pcpu_id = get_cpu_id();
@@ -576,6 +578,7 @@ void pause_vcpu(struct acrn_vcpu *vcpu, enum vcpu_state new_state)
 
 		/* For privilege uos, mark vhm request state as REQ_STATE_FREE. vcpu will reschdule then */
 		if (is_privil_mode(vcpu)) {
+			poweroff = true;
 			set_vhm_req_state(vcpu->vm, vcpu->vcpu_id, REQ_STATE_FREE);
 		}
 
