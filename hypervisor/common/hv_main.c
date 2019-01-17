@@ -58,6 +58,7 @@ void vcpu_thread(struct acrn_vcpu *vcpu)
 		if (poweroff && is_privil_mode(vcpu)) {
 			pr_acrnlog("Poweroff vm on pCPU%u", vcpu->pcpu_id);
 			restore_lapic(&privil_lapic_regs);
+			poweroff = false;
 		}
 
 		if ((need_reschedule(vcpu->pcpu_id) != 0)) {

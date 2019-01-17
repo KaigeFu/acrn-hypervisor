@@ -456,7 +456,8 @@ handle_vmexit(struct vmctx *ctx, struct vhm_request *vhm_req, int vcpu)
 	 * it will re-enter the uos and we will not have a chance to pause the vcpu.
 	 * we will mark it as done when pausing vcpu.
 	 */
-	if (privileged_vm && (VM_SUSPEND_POWEROFF == vm_get_suspend_mode()))
+	if (privileged_vm && ((VM_SUSPEND_POWEROFF == vm_get_suspend_mode()) ||
+		(VM_SUSPEND_FULL_RESET == vm_get_suspend_mode())))
 		return;
 
 	vm_notify_request_done(ctx, vcpu);
