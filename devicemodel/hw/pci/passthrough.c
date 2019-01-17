@@ -805,7 +805,7 @@ cfginitbar(struct vmctx *ctx, struct passthru_dev *ptdev)
 			}
 			base = bar.base & PCIM_BAR_MEM_BASE;
 		}
-		size = bar.length;
+		size = (bar.length + 0xFFFU) & (~0xFFFU);
 
 		if (bartype != PCIBAR_IO) {
 			/* note here PAGE_MASK is 0xFFFFF000 */
