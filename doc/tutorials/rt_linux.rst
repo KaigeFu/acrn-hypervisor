@@ -53,13 +53,13 @@ system on Intel KBL NUC with a SATA SSD as ``/dev/sda`` and an NVME SSD as
 
    a. Download Linux kernel real-time patch::
 
-         $ wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/4.19/patch-4.19.31-rt18.patch.xz
+         $ wget https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/4.19/older/patch-4.19.31-rt18.patch.xz
 
    #. Sync the kernel code to acrn-2019w17.4-160000p::
 
          $ git clone https://github.com/projectacrn/acrn-kernel.git
-         $ git checkout acrn-2019w17.4-160000p
          $ cd acrn-kernel
+         $ git checkout acrn-2019w17.4-160000p
          $ wget https://raw.githubusercontent.com/projectacrn/acrn-hypervisor/master/doc/tutorials/rt_linux.patch 
          $ git apply rt_linux.patch 
          $ xzcat ../patch-4.19.31-rt18.patch.xz | patch -p1
