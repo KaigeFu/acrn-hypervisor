@@ -15,7 +15,7 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 		.uuid = {0xdbU, 0xbbU, 0xd4U, 0x34U, 0x7aU, 0x57U, 0x42U, 0x16U,	\
 			 0xa1U, 0x2cU, 0x22U, 0x01U, 0xf1U, 0xabU, 0x02U, 0x40U},
 			/* dbbbd434-7a57-4216-a12c-2201f1ab0240 */
-		.guest_flags = 0UL,
+		.guest_flags = GUEST_FLAG_CLOS_REQUIRED,
 		.clos = 0U,
 		.memory = {
 			.start_hpa = 0UL,
@@ -49,6 +49,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* d2795438-25d6-11e8-864e-cb7a18b34643 */
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM1_CONFIG_VCPU_AFFINITY,
+		.guest_flags = GUEST_FLAG_CLOS_REQUIRED,
+		.clos = 0U,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -67,9 +69,10 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* 495ae2e5-2603-4d64-af76-d4bc5a8ec0e5 */
 
 		/* The hard RTVM must be launched as VM2 */
-		.guest_flags = GUEST_FLAG_HIGHEST_SEVERITY,
+		.guest_flags = GUEST_FLAG_HIGHEST_SEVERITY | GUEST_FLAG_CLOS_REQUIRED,
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM2_CONFIG_VCPU_AFFINITY,
+		.clos = 1U,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
@@ -90,6 +93,8 @@ struct acrn_vm_config vm_configs[CONFIG_MAX_VM_NUM] = {
 			/* 38158821-5208-4005-b72a-8a609e4190d0 */
 		.vcpu_num = 1U,
 		.vcpu_affinity = VM3_CONFIG_VCPU_AFFINITY,
+		.guest_flags = GUEST_FLAG_CLOS_REQUIRED,
+		.clos = 0U,
 		.vuart[0] = {
 			.type = VUART_LEGACY_PIO,
 			.addr.port_base = COM1_BASE,
